@@ -23,6 +23,8 @@ float 	float(4)		float(4)
 // Initialize Redio
 RFM69 radio;
 byte buff[MAX_SERIAL_SIZE];
+byte nrBuff[MAX_SERIAL_SIZE];
+int moteReadLength;
 // BEGIN Function Prototypes
 void Blink(byte PIN, int DELAY_MS);
 
@@ -55,13 +57,13 @@ void loop() {
 		*/
 	 	// End read data from serial 
 		// read Serial Message
-		sMsg = *(SerialMsg*)buff;
+		mMsg = *(SerialMsg*)buff;
 
-		if (sMsg.SerialDelimiter == 0) {
+		if (mMsg.SerialDelimiter == 0) {
 
 
-			//memcpy(o_payload.msg, &sMsg.SerialPayload, sizeof(sMsg.SerialPayloadSize));
-			radio.sendWithRetry(sMsg.NodeID, (const void*)(&sMsg.SerialPayload), sMsg.SerialPayloadSize);
+			//memcpy(o_payload.msg, &mMsg.SerialPayload, sizeof(mMsg.SerialPayloadSize));
+			radio.sendWithRetry(mMsg.NodeID, (const void*)(&mMsg.SerialPayload), mMsg.SerialPayloadSize);
 			// good Serial Message Blink Yellow Light
 			Blink(PASS_LED, 10);
 		} else {
@@ -71,25 +73,38 @@ void loop() {
 	}
 	// Get incomming messages
 	if ( radio.receiveDone() ) {
+		// Store data in nMsg
+		// Read data from radio
+		payload = *(Payload*)radio.DATA;
+
+		// Pack data 
+		nrMsg.SerialDelimiter = 0x00;
+		// Capture the source node address (sender)
+		nrMsg.NodeID = radio.SENDERID;
+		// Capture source message size
+		nrMsg.SerialPayloadSize = radio.DATALEN;
+
+		moteReadLength = SERIAL_HEADER_SIZE + nrMsg.SerialPayloadSize;
 
 
-		payload.msg = *(Payload*)radio.DATA;
-		nMsg.SerialDelimiter = 0x00;
-		nMsg.NodeID = radio.SENDERID;
-		nMsg.SerialPayloadSize = radio.DATALEN;
-
-		memcpy(nMsg.SerialPayload, &radio.DATA, nMsg.SerialPayloadSize);
-
-		//Blink(LED,5);
+		memcpy(nrMsg.SerialPayload, (const void*)(&radio.DATA), nrMsg.SerialPayloadSize);
 		Blink(LED, 10);
-		Serial.write(nMsg);
+		
+		//Serial.write(nrMsg, sizeof(nrMsg));
+		memcpy(nrBuff, &nrMsg, sizeof(nrMsg));
+		/*
+		for (int nr_buff = 0; nr_buff < sizeof(nrMsg); nr_buff ++ ) {
+			nrBuff[nr_buff] = nrMsg[nr_buff];
+			//Serial.print(nrMsg[nr_buff]);
+		}
+		*/
+		Serial.write(nrBuff, sizeof(nrMsg));
 		Serial.println(); // delimiter for node-red flow.
-
+		//delay(20);
 	}	
 }
 
-void Blink(byte PIN, int DELAY_MS)
-{
+void Blink(byte PIN, int DELAY_MS) {
   pinMode(PIN, OUTPUT);
   digitalWrite(PIN,HIGH);
   delay(DELAY_MS);
