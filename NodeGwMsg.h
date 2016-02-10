@@ -47,8 +47,8 @@ Developer Notes
 #define FRAME_BUFFER_SIZE 5
 #define MAX_SERIAL_SIZE 70 
 #define MAX_NETWORK_SIZE 61
-//#define MAX_PAYLOAD_SIZE 59 // Package size in payload
 #define WATCHDOG_DEFAULT 10000 // 10 seconds used by node
+#define SERIAL_HEADER_SIZE 3 // number of bytes in the header
 /*---------------------------------------------
 |	!! PKG Types !!
 |	Structure written to pkg[] array...
@@ -63,8 +63,8 @@ typedef struct {
   byte 				SerialPayloadSize; // Length structure to read
   byte  			SerialPayload[MAX_NETWORK_SIZE];
 } SerialMsg;
-SerialMsg sMsg;	// serial Message
-SerialMsg nMsg;	// node Message (rfm - radio)
+SerialMsg mMsg;	// serial Message
+SerialMsg nrMsg;	// node Message (rfm - radio)
 
 typedef struct {
 	byte 			MsgID;	// Coordination ID to ack/nak (unknown if needed for applications)
