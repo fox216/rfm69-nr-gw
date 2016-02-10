@@ -48,7 +48,7 @@ Developer Notes
 #define MAX_SERIAL_SIZE 70 
 #define MAX_NETWORK_SIZE 61
 #define WATCHDOG_DEFAULT 10000 // 10 seconds used by node
-#define SERIAL_HEADER_SIZE 3 // number of bytes in the header
+#define SERIAL_HEADER_SIZE 5 // number of bytes in the header
 /*---------------------------------------------
 |	!! PKG Types !!
 |	Structure written to pkg[] array...

@@ -84,7 +84,9 @@ void loop() {
 		// Capture source message size
 		nrMsg.SerialPayloadSize = radio.DATALEN;
 
-		moteReadLength = SERIAL_HEADER_SIZE + nrMsg.SerialPayloadSize;
+		//Serial.println(radio.DATALEN); // For rfm69-report message size = 20 (2 Bytes + 18 Byte Array)
+		
+		moteReadLength = SERIAL_HEADER_SIZE + radio.DATALEN;
 
 
 		memcpy(nrMsg.SerialPayload, (const void*)(&radio.DATA), nrMsg.SerialPayloadSize);
@@ -92,14 +94,16 @@ void loop() {
 		
 		//Serial.write(nrMsg, sizeof(nrMsg));
 		memcpy(nrBuff, &nrMsg, sizeof(nrMsg));
-		/*
+				/*
 		for (int nr_buff = 0; nr_buff < sizeof(nrMsg); nr_buff ++ ) {
 			nrBuff[nr_buff] = nrMsg[nr_buff];
 			//Serial.print(nrMsg[nr_buff]);
 		}
 		*/
-		Serial.write(nrBuff, sizeof(nrMsg));
+		
+		Serial.write(nrBuff, moteReadLength);
 		Serial.println(); // delimiter for node-red flow.
+		
 		//delay(20);
 	}	
 }
