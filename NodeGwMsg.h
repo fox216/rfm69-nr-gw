@@ -67,9 +67,8 @@ SerialMsg mMsg;	// serial Message
 SerialMsg nrMsg;	// node Message (rfm - radio)
 
 typedef struct {
-	byte 			MsgID;	// Coordination ID to ack/nak (unknown if needed for applications)
-  	byte 			MsgType; // Message type - Struct Decode (10)
-  	byte 			msg[59]; // Allocate remaining msg space for possible payload. Payload is node specific
+  	byte 			MsgType; 	//[1] Message type - Struct Decode (10)
+  	byte 			msg[59]; 	// Allocate remaining msg space for possible payload. Payload is node specific
 } Payload;
 Payload payload;
 
