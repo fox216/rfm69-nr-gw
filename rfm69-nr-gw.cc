@@ -22,10 +22,12 @@ float 	float(4)		float(4)
 #include <NodeConf.h>
 // Initialize Redio
 RFM69 radio;
+
+// Some shared variables.
 byte buff[MAX_SERIAL_SIZE];
 byte nrBuff[MAX_SERIAL_SIZE];
 int moteReadLength;
-// BEGIN Function Prototypes
+// -- BEGIN Function Prototypes
 void Blink(byte PIN, int DELAY_MS);
 
 // END Function Prototypes
@@ -67,11 +69,14 @@ void loop() {
 			// good Serial Message Blink Yellow Light
 			Blink(PASS_LED, 10);
 		} else {
+			
 			Blink(FAIL_LED, 10);
 
 		}	
 	}
-	// Get incomming messages
+	// Get incomming messages from Moteino Network
+	// Repack message for Node-Red Serial gateway. 
+	// Forward to gateway.\
 	if ( radio.receiveDone() ) {
 		// Store data in nMsg
 		// Read data from radio
@@ -79,26 +84,29 @@ void loop() {
 
 		// Pack data 
 		nrMsg.SerialDelimiter = 0x00;
+		
 		// Capture the source node address (sender)
 		nrMsg.NodeID = radio.SENDERID;
+		
 		// Capture source message size
 		nrMsg.SerialPayloadSize = radio.DATALEN; // Does not include 
 
-		//DEBUG Serial.println(radio.DATALEN); // For rfm69-report message size = 20 (2 Bytes + 18 Byte Array)
 		
+		// Calculate message length, needed for transmission
 		moteReadLength = SERIAL_HEADER_SIZE + radio.DATALEN;
 
-
+		// Copy data from Radio to Serial Payload. 
 		memcpy(nrMsg.SerialPayload, (const void*)(&radio.DATA), nrMsg.SerialPayloadSize);
+		
+		// Message Indicator
 		Blink(LED, 10);
+		
 		// convert nrMsg structure to array for serial Tx
 		memcpy(nrBuff, &nrMsg, sizeof(nrMsg));
 		
+		// Send data to Node-Red serial port		
 		Serial.write(nrBuff, moteReadLength);
 
-		//Serial.println(); // delimiter for node-red flow.
-		
-		//delay(20);
 	}	
 }
 
