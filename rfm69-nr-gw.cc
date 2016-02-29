@@ -28,7 +28,12 @@ byte buff[MAX_SERIAL_SIZE];
 byte nrBuff[MAX_SERIAL_SIZE];
 int moteReadLength;
 // -- BEGIN Function Prototypes
-void Blink(byte PIN, int DELAY_MS);
+void Blink(byte PIN, int DELAY_MS) {
+  pinMode(PIN, OUTPUT);
+  digitalWrite(PIN,HIGH);
+  delay(DELAY_MS);
+  digitalWrite(PIN,LOW);
+}
 
 // END Function Prototypes
 void setup() {
@@ -39,7 +44,6 @@ void setup() {
 }
 
 void loop() {
-	
 	// READ Serial input if avaiable...
 	if (Serial.available() > 0) {
 		//Wait for serial buffer to fill
@@ -60,59 +64,39 @@ void loop() {
 	 	// End read data from serial 
 		// read Serial Message
 		mMsg = *(SerialMsg*)buff;
-
 		if (mMsg.SerialDelimiter == 0) {
-
-
 			//memcpy(o_payload.msg, &mMsg.SerialPayload, sizeof(mMsg.SerialPayloadSize));
-			radio.sendWithRetry(mMsg.NodeID, (const void*)(&mMsg.SerialPayload), mMsg.SerialPayloadSize);
+			//radio.sendWithRetry(mMsg.NodeID, (const void*)(&mMsg.SerialPayload), mMsg.SerialPayloadSize);
+			radio.send(mMsg.NodeID, (const void*)(&mMsg.SerialPayload), mMsg.SerialPayloadSize);
 			// good Serial Message Blink Yellow Light
-			Blink(PASS_LED, 10);
-		} else {
-			
-			Blink(FAIL_LED, 10);
-
-		}	
+			Blink(LED, 10);
+		} 	
 	}
+
 	// Get incomming messages from Moteino Network
 	// Repack message for Node-Red Serial gateway. 
-	// Forward to gateway.\
-	if ( radio.receiveDone() ) {
+	// Forward to gateway.
+	if (radio.receiveDone() ) {
 		// Store data in nMsg
 		// Read data from radio
+		
 		payload = *(Payload*)radio.DATA;
-
 		// Pack data 
 		nrMsg.SerialDelimiter = 0x00;
-		
 		// Capture the source node address (sender)
 		nrMsg.NodeID = radio.SENDERID;
-		
 		// Capture source message size
 		nrMsg.SerialPayloadSize = radio.DATALEN; // Does not include 
-
-		
 		// Calculate message length, needed for transmission
 		moteReadLength = SERIAL_HEADER_SIZE + radio.DATALEN;
-
 		// Copy data from Radio to Serial Payload. 
 		memcpy(nrMsg.SerialPayload, (const void*)(&radio.DATA), nrMsg.SerialPayloadSize);
-		
 		// Message Indicator
 		Blink(LED, 10);
-		
 		// convert nrMsg structure to array for serial Tx
 		memcpy(nrBuff, &nrMsg, sizeof(nrMsg));
-		
 		// Send data to Node-Red serial port		
 		Serial.write(nrBuff, moteReadLength);
-
+		
 	}	
-}
-
-void Blink(byte PIN, int DELAY_MS) {
-  pinMode(PIN, OUTPUT);
-  digitalWrite(PIN,HIGH);
-  delay(DELAY_MS);
-  digitalWrite(PIN,LOW);
 }
